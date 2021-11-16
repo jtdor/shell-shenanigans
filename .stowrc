@@ -1,0 +1,2 @@
+--ignore='\.git.*|LICENSE|Makefile|README\.md|stow|.*\.swp'
+--restow
