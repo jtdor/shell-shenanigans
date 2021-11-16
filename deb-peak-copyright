@@ -1,0 +1,53 @@
+#!/bin/sh
+set -eu
+
+cat_copyright()
+{
+	found=
+
+	if dpkg-query -l -- "$1" 2>/dev/null | grep -q ^ii; then
+		dpkg-query -L -- "$1" 2>/dev/null | while read -r file; do
+			case "$file" in
+				$2)
+					cat -- "$file"
+					return 1
+					;;
+			esac
+		done || return 0
+
+		found=installed
+	fi
+
+	if apt-get download -q -- "$1" >/dev/null 2>&1; then
+		if ! dpkg-deb --fsys-tarfile -- *.deb | tar --wildcards -Ox -- ".${2}" 2>/dev/null; then
+			found=$found${found:+ and }downloaded
+		fi
+		rm -f -- *.deb
+	elif [ -z "$found" ]; then
+		printf "Package %s unknown or unavailable\n" "$1" >&2
+		return 1
+	fi
+
+	if [ -n "$found" ]; then
+		printf "No file matching %s in %s package %s\n" "$2" "$found" "$1" >&2
+		return 1
+	fi
+
+	return 0
+}
+
+: "${copyright_path:=/usr/share/doc/*/copyright}"
+copyright_path=${copyright_path#.}
+
+pager=
+if [ -t 1 ]; then
+	pager=$(command -v pager) || :
+fi
+
+tmpdir=$(mktemp -d) || exit
+trap "rm -rf -- '$tmpdir'" EXIT HUP INT TERM
+cd -- "$tmpdir" || exit
+
+for pkg in "$@"; do
+	eval cat_copyright \"\$pkg\" \"\$copyright_path\" ${pager:+2>&1 | \"$pager\"}
+done
