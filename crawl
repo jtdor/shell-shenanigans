@@ -1,0 +1,125 @@
+#!/bin/sh
+
+die()
+{
+	n=$1
+	shift
+	printf "$@" >&2
+	exit "$n"
+}
+
+do_it()
+{
+	printf "$title_fmt" "$destination"
+	if [ "$destination" = localhost ]; then
+		( "$@" )
+	else
+		( ssh -- "$destination" "$@" )
+	fi
+}
+
+require()
+{
+	if ! command -v "$1" 2>/dev/null; then
+		die 2 "%s not found in PATH\n" "$1"
+	fi
+}
+
+usage()
+{
+	printf "\
+Usage: %s [OPTION]... DESTINATION... -- COMMAND
+
+	-P Do not use a pager for command output even if standard output is a terminal.
+	-t Print a title above the command output for each destination.
+	-s Skip unreachable hosts completely without any output.
+" "$0"
+}
+
+no_pager=n
+show_title=n
+skip_offline=n
+init_title_fmt="# %s:\n"
+
+if [ $# -eq 0 ]; then
+	usage >&2
+	exit 2
+fi
+
+while getopts "hsPt" opt; do
+	case "$opt" in
+		h)
+			usage
+			exit 0
+			;;
+		P)
+			no_pager=y
+			;;
+		t)
+			show_title=y
+			;;
+		s)
+			skip_offline=y
+			;;
+		*)
+			usage >&2
+			exit 2
+			;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
+destinations=
+while [ $# -gt 0 ] && [ "$1" != "--" ]; do
+	if [ -z "$1" ]; then
+		destinations="$destinations localhost"
+	else
+		destinations="$destinations $1"
+	fi
+	shift
+done
+
+if [ ${#destinations} -eq 0 ]; then
+	usage >&2
+	die 2 "missing any destination(s)\n"
+fi
+
+if [ $# -lt 2 ]; then
+	usage >&2
+	die 2 "missing any command(s)\n"
+fi
+
+# Skip the -- delimiter
+shift
+
+require ssh >/dev/null
+
+if [ "$no_pager" != y ] && [ -t 1 ]; then
+	pager=$(require pager) || exit
+fi
+
+if [ "$show_title" = y ]; then
+	title_fmt="$init_title_fmt"
+fi
+
+if [ "$skip_offline" = y ]; then
+	require ping >/dev/null
+fi
+
+for destination in $destinations; do
+	if [ "$skip_offline" = y ]; then
+		host=$(printf "$destination" | sed -E 's/^(ssh:\/\/)?([[:graph:]]+@)?\[?([a-zA-Z0-9.:_-]+)]?(:[[:digit:]]+)?\/?$/\3/')
+		ping -qc1 -- "$host" >/dev/null || continue
+	fi
+
+	if [ -n "$pager" ]; then
+		do_it "$@" 2>&1 | pager
+	else
+		do_it "$@"
+	fi
+
+	if [ "$show_title" = y ]; then
+		title_fmt="\n$init_title_fmt"
+	fi
+done

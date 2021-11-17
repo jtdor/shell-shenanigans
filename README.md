@@ -6,6 +6,19 @@ are based on my posts in the German [debianforum.de](https://debianforum.de/).
 
 ## Commands
 
+## [`crawl`](/crawl)
+Executes a command on multiple hosts via SSH. Has a short built-in help.
+
+Example:
+```sh
+~$ crawl -Pt localhost remotehost -- uptime
+# localhost:
+ 15:44:20 up 6 days,  3:48,  1 user,  load average: 0,25, 0,88, 1,30
+
+# remotehost:
+ 14:44:21 up 14 days,  3:47,  0 users,  load average: 0.29, 0.14, 0.14
+```
+
 ## [`deb-peak-copyright`](/deb-peak-copyright)
 Displays the copyright file (or any file, really) of Debian packages. Uses the
 local file, if the package is installed, or downloads and extracts it first.
