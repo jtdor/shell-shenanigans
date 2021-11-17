@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+cleanup()
+{
+	rm -fr "$tmpdir"
+}
+
+if [ $# -lt 1 ]; then
+	echo "missing arguments" >&2
+	exit 2
+fi
+
+tmpdir=$(mktemp -d)
+trap cleanup EXIT INT TERM
+cd "$tmpdir"
+
+title=${1:-.}
+shift
+mkdir -p "$title"
+for str in "$@"; do
+	mkdir -p "$title/$str"
+done
+
+tree -a --noreport "$title"

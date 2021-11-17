@@ -32,6 +32,18 @@ The environment variable `copyright_path` can be set to the path of a different
 file. The path can contain a `*` as a wildcard, e.g. as a placeholder for the
 package name.
 
+## [`treeprint`](/treeprint)
+Displays given words in a tree-like structure, using `tree`.
+
+Example:
+```sh
+$ treeprint root node-a node-b node-b/node-c
+root
+├── node-a
+└── node-b
+    └── node-c
+```
+
 ## Usage Reminder (to self)
 Use [`stow`](https://www.gnu.org/software/stow/) to link the commands into `~/bin`:
 ```sh
