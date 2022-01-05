@@ -32,6 +32,19 @@ The environment variable `copyright_path` can be set to the path of a different
 file. The path can contain a `*` as a wildcard, e.g. as a placeholder for the
 package name.
 
+
+## [`showmd`](/showmd)
+Quickly display a Markdown file (converted to HTML) in a browser. Watches the
+Markdown file, updating the HTML file on changes.
+
+Example:
+```sh
+~$ showmd README.md
+```
+
+It might be overkill to use Python’s http.server in here. Just `open`ing the
+HTML file would have done it.
+
 ## [`treeprint`](/treeprint)
 Displays given words in a tree-like structure, using `tree`.
 
