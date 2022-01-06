@@ -20,6 +20,7 @@ elif command -v markdown >/dev/null; then
 		markdown "$1" > "$2"
 	}
 else
+	# shellcheck disable=SC2016
 	printf 'Missing any of `markdown` or `pandoc`\n' >&2
 	exit 2
 fi
