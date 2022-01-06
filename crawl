@@ -4,12 +4,14 @@ die()
 {
 	n=$1
 	shift
+	# shellcheck disable=SC2059
 	printf "$@" >&2
 	exit "$n"
 }
 
 do_it()
 {
+	# shellcheck disable=SC2059
 	printf "$title_fmt" "$destination"
 	if [ "$destination" = localhost ]; then
 		( "$@" )
@@ -109,7 +111,7 @@ fi
 
 for destination in $destinations; do
 	if [ "$skip_offline" = y ]; then
-		host=$(printf "$destination" | sed -E 's/^(ssh:\/\/)?([[:graph:]]+@)?\[?([a-zA-Z0-9.:_-]+)]?(:[[:digit:]]+)?\/?$/\3/')
+		host=$(printf "%s" "$destination" | sed -E 's/^(ssh:\/\/)?([[:graph:]]+@)?\[?([a-zA-Z0-9.:_-]+)]?(:[[:digit:]]+)?\/?$/\3/')
 		ping -qc1 -- "$host" >/dev/null || continue
 	fi
 
