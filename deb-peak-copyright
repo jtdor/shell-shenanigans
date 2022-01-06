@@ -7,6 +7,7 @@ cat_copyright()
 
 	if dpkg-query -l -- "$1" 2>/dev/null | grep -q ^ii; then
 		dpkg-query -L -- "$1" 2>/dev/null | while read -r file; do
+			# shellcheck disable=SC2254
 			case "$file" in
 				$2)
 					cat -- "$file"
@@ -45,9 +46,11 @@ if [ -t 1 ]; then
 fi
 
 tmpdir=$(mktemp -d) || exit
+# shellcheck disable=SC2064
 trap "rm -rf -- '$tmpdir'" EXIT HUP INT TERM
 cd -- "$tmpdir" || exit
 
+# shellcheck disable=SC2034
 for pkg in "$@"; do
 	eval cat_copyright \"\$pkg\" \"\$copyright_path\" ${pager:+2>&1 | \"$pager\"}
 done
