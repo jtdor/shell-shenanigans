@@ -20,6 +20,22 @@ do_it()
 	fi
 }
 
+get_destinations()
+{
+	if [[ "$skip_offline" == y ]]; then
+		for destination in "$@"; do
+			host=$(printf "%s" "$destination" | sed -E 's/^(ssh:\/\/)?([[:graph:]]+@)?\[?([a-zA-Z0-9.:_-]+)]?(:[[:digit:]]+)?\/?$/\3/')
+			if ping -qc1 -- "$host" >/dev/null; then
+				printf "%s\n" "$destination"
+			fi
+		done
+	else
+		for destination in "$@"; do
+			printf "%s\n" "$destination"
+		done
+	fi
+}
+
 require()
 {
 	if ! command -v "$1" 2>/dev/null; then
@@ -105,12 +121,10 @@ if [[ "$skip_offline" == y ]]; then
 	require ping >/dev/null
 fi
 
-for destination in "${destinations[@]}"; do
-	if [[ "$skip_offline" == y ]]; then
-		host=$(printf "%s" "$destination" | sed -E 's/^(ssh:\/\/)?([[:graph:]]+@)?\[?([a-zA-Z0-9.:_-]+)]?(:[[:digit:]]+)?\/?$/\3/')
-		ping -qc1 -- "$host" >/dev/null || continue
-	fi
+coproc get_destinations "${destinations[@]}"
+eval {fd}<&"${COPROC[0]}"
 
+while read -ru"$fd" destination; do
 	if [[ -n "$pager" ]]; then
 		do_it "$@" 2>&1 | pager
 	else
@@ -121,3 +135,5 @@ for destination in "${destinations[@]}"; do
 		title_fmt="\n$init_title_fmt"
 	fi
 done
+
+eval {fd}<&-
