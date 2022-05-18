@@ -25,7 +25,7 @@ get_destinations()
 	if [[ "$skip_offline" == y ]]; then
 		for destination in "$@"; do
 			host=$(printf "%s" "$destination" | sed -E 's/^(ssh:\/\/)?([[:graph:]]+@)?\[?([a-zA-Z0-9.:_-]+)]?(:[[:digit:]]+)?\/?$/\3/')
-			if ping -qc1 -- "$host" &>/dev/null; then
+			if [[ $host == localhost ]] || ping -qc1 -- "$host" &>/dev/null; then
 				printf "%s\n" "$destination"
 			fi
 		done
