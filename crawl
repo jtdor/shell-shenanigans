@@ -131,7 +131,7 @@ while read -ru"$fd" destination; do
 		do_it "$@"
 	fi
 
-	if [[ "$show_title" == y ]]; then
+	if [[ "$no_pager" == y && "$show_title" == y ]]; then
 		title_fmt="\n$init_title_fmt"
 	fi
 done
