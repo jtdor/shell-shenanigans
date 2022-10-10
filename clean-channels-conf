@@ -1,0 +1,105 @@
+#!/bin/bash
+set -eu
+
+die()
+{
+	local r=$1
+	shift
+	# shellcheck disable=SC2059
+	printf "$@"
+	exit "$r"
+}
+
+is_sd_duplicate()
+{
+	local channel=$1
+	local other_channel
+
+	for channel_line in "${channel_lines[@]}"; do
+		read_channel_name "$channel_line" other_channel
+		[[ $channel != "$other_channel" ]] || continue
+
+		if [[ "$channel HD" == "$other_channel" ||
+			( $other_channel == *" HD "* &&  $channel == "${other_channel/ HD/}" ) ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+is_unwanted()
+{
+	local channel=$1
+
+	for unwanted_channel in "${unwanted_channels[@]}"; do
+		# $unwanted_channel can be a pattern:
+		# shellcheck disable=SC2053
+		if [[ $channel == $unwanted_channel && $unwanted_channel != "#"* ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+read_channel_name()
+{
+	local name=${1%%:*}
+	upvar "$2" "${name%%;*}"
+}
+
+upvar()
+{
+    unset -v "$1" && eval "$1=\"\$2\""
+}
+
+usage()
+{
+	printf "\
+Usage: %s CHANNELS_CONF [UNWANTED_CHANNELS]
+
+Clean SD channels for which an HD channel of same name exists, and optionally
+unwanted channels from a channels.conf. The cleaned channels.conf is printed to
+standard out.
+
+The path to a channels.conf must be given as the first parameter CHANNELS_CONF.
+
+An optional file with a list of unwanted channels can be given as a second
+parameter UNWANTED_CHANNELS. Each line in this list should contain the name of a
+channel to remove from the output. The names may contain a * as a wildcard. Lines
+starting with # are treated as comments and ignored.
+" "$0"
+}
+
+if [[ $# -eq 0 ]]; then
+	usage >&2
+	exit 2
+fi
+
+[[ $# -le 2 ]] || die 2 "too many arguments\n"
+[[ $# -ge 1 ]] || die 2 "missing argument(s)\n"
+
+# We load the complete input channels.conf upfront. The output of this script can
+# be redirected to the same file without problems.
+mapfile channel_lines <"$1"
+
+unwanted_channels=()
+if [[ $# -eq 2 ]]; then
+	mapfile -t unwanted_channels <"$2"
+fi
+
+num_channels=${#channel_lines[@]}
+for (( i = 0; i < num_channels; ++i )); do
+	channel=
+	read_channel_name "${channel_lines[$i]}" channel
+	# Also drop empty or bogus entries:
+	if [[ ! $channel || $channel == '???' ]] || is_sd_duplicate "$channel" ||
+		is_unwanted "$channel"; then
+		unset "channel_lines[$i]"
+		continue
+	fi
+done
+
+# Reindex, drop now-empty indices:
+channel_lines=( "${channel_lines[@]}" )
+
+printf "%s" "${channel_lines[@]}"

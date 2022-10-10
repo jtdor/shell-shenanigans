@@ -6,6 +6,21 @@ are based on my posts in the German [debianforum.de](https://debianforum.de/).
 
 ## Commands
 
+## [`clean-channels-conf`](/clean-channels-conf)
+Clean SD channels for which an HD channel of same name exists, and optionally
+unwanted channels from a channels.conf. The cleaned channels.conf is printed to
+standard out.
+
+Prints a short help when called without arguments.
+
+Example:
+```console
+user@host:~$ clean-channels-conf channels.conf unwanted_channels.list
+Das Erste HD;ARD:330000:C0M256:C:6900:5101=27:0;5102=deu@106,5103=mis@106,5107=qks@106:5104:0:10301:1:1051:0
+ZDF HD;ZDFvision:450000:C0M256:C:6900:6110=27:0;6120=deu@106,6121=mis@106,6123=mul@106:6130:0:11110:1:1079:0
+…
+```
+
 ## [`crawl`](/crawl)
 Executes a command on multiple hosts via SSH. Has a short built-in help.
 
