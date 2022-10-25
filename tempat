@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+runfile=$(mktemp /run/tempat.XXXXXXXXXX)
+[ ! -t 0 ] || printf "tempat> "
+read -r cmd
+printf "%s" "rm '$runfile' >/dev/null 2>&1 || exit; $cmd" | at "$@"

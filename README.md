@@ -60,6 +60,20 @@ user@host:~$ showmd README.md
 It might be overkill to use Python’s http.server in here. Just `open`ing the
 HTML file would have done it.
 
+## [`tempat`](/tempat)
+Wrapper around `at` to make a job non-persistent, meaning it does not execute
+after a reboot. Supports commands passed on standard input (same as `at` does),
+but not with `-f`.
+
+Requires `/run` to be mounted as a tmpfs (it generally is).
+
+Example:
+```console
+root@host:~# tempat now + 1min
+tempat> # Input command here
+root@host:~# echo "touch /run/AT_WAS_HERE" | tempat now + 1min
+```
+
 ## [`treeprint`](/treeprint)
 Displays given words in a tree-like structure, using `tree`.
 
