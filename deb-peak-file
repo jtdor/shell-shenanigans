@@ -7,7 +7,7 @@ cat_file()
 	pkg_no_ver=${1%=*}
 	pkg_no_ver=${pkg_no_ver%/*}
 
-	if dpkg-query -l -- "$pkg_no_ver" 2>/dev/null | grep -q ^ii; then
+	if [ 'ii ' = "$(dpkg-query -W -f '${db:Status-Abbrev}' -- "$pkg_no_ver" 2>/dev/null)" ]; then
 		dpkg-query -L -- "$pkg_no_ver" 2>/dev/null | while read -r file; do
 			# shellcheck disable=SC2254
 			case "$file" in
