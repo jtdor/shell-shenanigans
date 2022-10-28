@@ -34,19 +34,24 @@ user@host:~$ crawl -Pt localhost remotehost -- uptime
  14:44:21 up 14 days,  3:47,  0 users,  load average: 0.29, 0.14, 0.14
 ```
 
-## [`deb-peak-copyright`](/deb-peak-copyright)
-Displays the copyright file (or any file, really) of Debian packages. Uses the
-local file, if the package is installed, or downloads and extracts it first.
+## [`deb-peak-file`](/deb-peak-file)
+Displays any file from one or multiple Debian packages. Uses the local file, if
+a package is installed, or downloads and extracts the package first to a
+temporary directory.
+
+For historic reasons, the copyright file from `/usr/share/doc/PACKAGE` is
+displayed by default. A different file can be selected by specifying a file
+path after the package name, separating name and path with `//` (so there will
+be **three** consecutive `/`, including the one from the given path). The path
+may contain a `*` as a wildcard, e.g. as a placeholder for the package name.
 
 Example:
 ```console
-user@host:~$ deb-peak-copyright dash libc6
+user@host:~$ deb-peak-file dash libc6
+[…]
+user@host:~$ deb-peak-file bash///etc/bash.bashrc
 […]
 ```
-The environment variable `copyright_path` can be set to the path of a different
-file. The path can contain a `*` as a wildcard, e.g. as a placeholder for the
-package name.
-
 
 ## [`showmd`](/showmd)
 Quickly display a Markdown file (converted to HTML) in a browser. Watches the
