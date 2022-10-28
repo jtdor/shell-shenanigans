@@ -76,7 +76,7 @@ cd -- "$tmpdir" || exit
 
 for pkg_and_path in "$@"; do
 	pkg=${pkg_and_path%%//*}
-	path=${pkg_and_path#$pkg}
+	path=${pkg_and_path#"$pkg"}
 	path=${path#//}
 
 	# Default to the copyright file for historic reasons
