@@ -37,9 +37,6 @@ cat_copyright()
 	return 0
 }
 
-: "${copyright_path:=/usr/share/doc/*/copyright}"
-copyright_path=${copyright_path#.}
-
 pager=
 if [ -t 1 ]; then
 	pager=$(command -v pager) || :
@@ -50,7 +47,13 @@ tmpdir=$(mktemp -d) || exit
 trap "rm -rf -- '$tmpdir'" EXIT HUP INT TERM
 cd -- "$tmpdir" || exit
 
-# shellcheck disable=SC2034
-for pkg in "$@"; do
-	eval cat_copyright \"\$pkg\" \"\$copyright_path\" ${pager:+2>&1 | \"$pager\"}
+for pkg_and_path in "$@"; do
+	pkg=${pkg_and_path%%//*}
+	path=${pkg_and_path#$pkg}
+	path=${path#//}
+
+	# Default to the copyright file for historic reasons
+	: "${path:=/usr/share/doc/*/copyright}"
+
+	eval cat_copyright \"\$pkg\" \"\$path\" ${pager:+2>&1 | \"$pager\"}
 done
