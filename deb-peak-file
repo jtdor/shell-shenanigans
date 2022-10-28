@@ -39,6 +39,31 @@ cat_file()
 	return 0
 }
 
+usage()
+{
+	printf "\
+Usage: %s pkg[{=pkg_version_number | /target_release}][//file_path]...
+" "$1"
+}
+
+if [ $# -eq 0 ]; then
+	usage "$0"
+	exit 2
+fi
+
+while getopts 'h' opt; do
+	case "$opt" in
+		h)
+			usage "$0"
+			exit 0
+			;;
+		*)
+			usage "$0" >&2
+			exit 2
+			;;
+	esac
+done
+
 pager=
 if [ -t 1 ]; then
 	pager=$(command -v pager) || :
