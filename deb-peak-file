@@ -4,9 +4,11 @@ set -eu
 cat_file()
 {
 	found=
+	pkg_no_ver=${1%=*}
+	pkg_no_ver=${pkg_no_ver%/*}
 
-	if dpkg-query -l -- "$1" 2>/dev/null | grep -q ^ii; then
-		dpkg-query -L -- "$1" 2>/dev/null | while read -r file; do
+	if dpkg-query -l -- "$pkg_no_ver" 2>/dev/null | grep -q ^ii; then
+		dpkg-query -L -- "$pkg_no_ver" 2>/dev/null | while read -r file; do
 			# shellcheck disable=SC2254
 			case "$file" in
 				$2)
