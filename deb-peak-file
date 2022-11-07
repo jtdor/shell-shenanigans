@@ -7,23 +7,41 @@ cat_file()
 	pkg_no_ver=${1%=*}
 	pkg_no_ver=${pkg_no_ver%/*}
 
+	is_ctrl_file_path=n
+	case "$2" in
+		DEBIAN/*)
+			is_ctrl_file_path=y
+			;;
+	esac
+
 	if [ 'ii ' = "$(dpkg-query -W -f '${db:Status-Abbrev}' -- "$pkg_no_ver" 2>/dev/null)" ]; then
-		dpkg-query -L -- "$pkg_no_ver" 2>/dev/null | while read -r file; do
-			# shellcheck disable=SC2254
-			case "$file" in
-				$2)
-					cat -- "$file"
-					return 1
-					;;
-			esac
-		done || return 0
+		if [ "$is_ctrl_file_path" = y ]; then
+			dpkg-query --control-show -- "$pkg_no_ver" "${2#DEBIAN/}"
+			return
+		else
+			dpkg-query -L -- "$pkg_no_ver" 2>/dev/null | while read -r file; do
+				# shellcheck disable=SC2254
+				case "$file" in
+					$2)
+						cat -- "$file"
+						return 1
+						;;
+				esac
+			done || return 0
+		fi
 
 		found=installed
 	fi
 
 	if apt-get download -q -- "$1" >/dev/null 2>&1; then
-		if ! dpkg-deb --fsys-tarfile -- *.deb | tar --wildcards -Ox -- ".${2}" 2>/dev/null; then
-			found=$found${found:+ and }downloaded
+		if [ "$is_ctrl_file_path" = y ]; then
+			if ! dpkg-deb --ctrl-tarfile -- *.deb | tar --wildcards -Ox -- ".${2#DEBIAN}" 2>/dev/null; then
+				found=$found${found:+ and }downloaded
+			fi
+		else
+			if ! dpkg-deb --fsys-tarfile -- *.deb | tar --wildcards -Ox -- ".${2}" 2>/dev/null; then
+				found=$found${found:+ and }downloaded
+			fi
 		fi
 		rm -f -- *.deb
 	elif [ -z "$found" ]; then
@@ -42,7 +60,7 @@ cat_file()
 usage()
 {
 	printf "\
-Usage: %s pkg[{=pkg_version_number | /target_release}][//file_path]...
+Usage: %s pkg[{=pkg_version_number | /target_release}][{//file_path | //DEBIAN/ctrl_file }]...
 " "$1"
 }
 

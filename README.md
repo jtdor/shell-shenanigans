@@ -53,6 +53,13 @@ user@host:~$ deb-peak-file bash///etc/bash.bashrc
 […]
 ```
 
+Control files can be displayed with a special path starting with `DEBIAN/`:
+```console
+user@host:~$ deb-peak-file bash//DEBIAN/postinst
+[…]
+```
+Note there are only **two** `/` after the package name in this case.
+
 ## [`showmd`](/showmd)
 Quickly display a Markdown file (converted to HTML) in a browser. Watches the
 Markdown file, updating the HTML file on changes.
