@@ -11,7 +11,7 @@ die()
 
 require()
 {
-	if ! command -v "$1" 2>/dev/null; then
+	if ! command -v "$1" &>/dev/null; then
 		die 2 "%s not found in PATH\n" "$1"
 	fi
 }
@@ -80,10 +80,10 @@ fi
 # Skip the -- delimiter
 shift
 
-require ssh >/dev/null
+require ssh
 
 if [[ "$no_pager" != y && -t 1 ]]; then
-	pager=$(require pager) || exit
+	require pager
 
 	do_it()
 	{
@@ -115,7 +115,7 @@ if [[ "$show_title" == y ]]; then
 fi
 
 if [[ "$skip_offline" == y ]]; then
-	require ping >/dev/null
+	require ping
 
 	get_destinations()
 	{
