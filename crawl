@@ -20,22 +20,6 @@ do_it()
 	fi
 }
 
-get_destinations()
-{
-	if [[ "$skip_offline" == y ]]; then
-		for destination in "$@"; do
-			host=$(printf "%s" "$destination" | sed -E 's/^(ssh:\/\/)?([[:graph:]]+@)?\[?([a-zA-Z0-9.:_-]+)]?(:[[:digit:]]+)?\/?$/\3/')
-			if [[ $host == localhost ]] || ping -qc1 -- "$host" &>/dev/null; then
-				printf "%s\n" "$destination"
-			fi
-		done
-	else
-		for destination in "$@"; do
-			printf "%s\n" "$destination"
-		done
-	fi
-}
-
 require()
 {
 	if ! command -v "$1" 2>/dev/null; then
@@ -119,6 +103,23 @@ fi
 
 if [[ "$skip_offline" == y ]]; then
 	require ping >/dev/null
+
+	get_destinations()
+	{
+		for destination in "$@"; do
+			host=$(printf "%s" "$destination" | sed -E 's/^(ssh:\/\/)?([[:graph:]]+@)?\[?([a-zA-Z0-9.:_-]+)]?(:[[:digit:]]+)?\/?$/\3/')
+			if [[ $host == localhost ]] || ping -qc1 -- "$host" &>/dev/null; then
+				printf "%s\n" "$destination"
+			fi
+		done
+	}
+else
+	get_destinations()
+	{
+		for destination in "$@"; do
+			printf "%s\n" "$destination"
+		done
+	}
 fi
 
 coproc get_destinations "${destinations[@]}"
