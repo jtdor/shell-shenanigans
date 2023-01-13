@@ -9,17 +9,6 @@ die()
 	exit "$n"
 }
 
-do_it()
-{
-	# shellcheck disable=SC2059
-	printf "$title_fmt" "$destination"
-	if [[ "$destination" == localhost ]]; then
-		( "$@" )
-	else
-		( ssh -- "$destination" "$@" )
-	fi
-}
-
 require()
 {
 	if ! command -v "$1" 2>/dev/null; then
@@ -95,6 +84,30 @@ require ssh >/dev/null
 
 if [[ "$no_pager" != y && -t 1 ]]; then
 	pager=$(require pager) || exit
+
+	do_it()
+	{
+		# shellcheck disable=SC2059
+		printf "$title_fmt" "$destination"
+		# Since the output is piped into a pager, both cases are already
+		# executed in a subshell here:
+		if [[ "$destination" == localhost ]]; then
+			"$@"
+		else
+			ssh -- "$destination" "$@"
+		fi 2>&1 | pager
+	}
+else
+	do_it()
+	{
+		# shellcheck disable=SC2059
+		printf "$title_fmt" "$destination"
+		if [[ "$destination" == localhost ]]; then
+			( "$@" )
+		else
+			( ssh -- "$destination" "$@" )
+		fi
+	}
 fi
 
 if [[ "$show_title" == y ]]; then
@@ -127,11 +140,7 @@ coproc get_destinations "${destinations[@]}"
 eval {fd}<&"${COPROC[0]}"
 
 while read -ru"$fd" destination; do
-	if [[ -n "$pager" ]]; then
-		do_it "$@" 2>&1 | pager
-	else
-		do_it "$@"
-	fi
+	do_it "$@"
 
 	if [[ "$no_pager" == y && "$show_title" == y ]]; then
 		title_fmt="\n$init_title_fmt"
