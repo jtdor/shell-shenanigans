@@ -87,15 +87,17 @@ if [[ "$no_pager" != y && -t 1 ]]; then
 
 	do_it()
 	{
-		# shellcheck disable=SC2059
-		printf "$title_fmt" "$destination"
-		# Since the output is piped into a pager, both cases are already
+		# Since the output is piped into a pager, the command is already
 		# executed in a subshell here:
-		if [[ "$destination" == localhost ]]; then
-			"$@"
-		else
-			ssh -- "$destination" "$@"
-		fi 2>&1 | pager
+		{
+			# shellcheck disable=SC2059
+			printf "$title_fmt" "$destination"
+			if [[ "$destination" == localhost ]]; then
+				"$@"
+			else
+				ssh -- "$destination" "$@"
+			fi
+		} 2>&1 | pager
 	}
 else
 	do_it()
