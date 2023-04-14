@@ -12,12 +12,12 @@ cleanup()
 if command -v pandoc >/dev/null; then
 	md2html()
 	{
-		pandoc -o"$2" -s --quiet "$1"
+		pandoc -o"$2" -s --quiet "$1" || :
 	}
 elif command -v markdown >/dev/null; then
 	md2html()
 	{
-		markdown "$1" > "$2"
+		markdown "$1" > "$2" || :
 	}
 else
 	# shellcheck disable=SC2016
