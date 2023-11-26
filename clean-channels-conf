@@ -130,9 +130,6 @@ for ((i = 0; i < num_channels; ++i)); do
 	fi
 done
 
-# Reindex, drop now-empty indices:
-channel_lines=("${channel_lines[@]}")
-
 sorted_channel_lines=()
 for ordered_channel in "${channel_order[@]}"; do
 	find_channel channel_lines "$ordered_channel" i || continue
