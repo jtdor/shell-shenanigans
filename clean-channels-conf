@@ -20,7 +20,7 @@ is_sd_duplicate()
 		[[ $channel != "$other_channel" ]] || continue
 
 		if [[ "$channel HD" == "$other_channel" ||
-			( $other_channel == *" HD "* &&  $channel == "${other_channel/ HD/}" ) ]]; then
+			($other_channel == *" HD "* && $channel == "${other_channel/ HD/}") ]]; then
 			return 0
 		fi
 	done
@@ -49,7 +49,7 @@ read_channel_name()
 
 upvar()
 {
-    unset -v "$1" && eval "$1=\"\$2\""
+	unset -v "$1" && eval "$1=\"\$2\""
 }
 
 usage()
@@ -88,7 +88,7 @@ if [[ $# -eq 2 ]]; then
 fi
 
 num_channels=${#channel_lines[@]}
-for (( i = 0; i < num_channels; ++i )); do
+for ((i = 0; i < num_channels; ++i)); do
 	channel=
 	read_channel_name "${channel_lines[$i]}" channel
 	# Also drop empty or bogus entries:
@@ -100,6 +100,6 @@ for (( i = 0; i < num_channels; ++i )); do
 done
 
 # Reindex, drop now-empty indices:
-channel_lines=( "${channel_lines[@]}" )
+channel_lines=("${channel_lines[@]}")
 
 printf "%s" "${channel_lines[@]}"
