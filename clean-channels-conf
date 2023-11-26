@@ -118,8 +118,7 @@ if [[ $# -gt 2 ]]; then
 	mapfile -t unwanted_channels <"$3"
 fi
 
-num_channels=${#channel_lines[@]}
-for ((i = 0; i < num_channels; ++i)); do
+for i in "${!channel_lines[@]}"; do
 	channel=
 	read_channel_name "${channel_lines[$i]}" channel
 	# Also drop empty or bogus entries:
