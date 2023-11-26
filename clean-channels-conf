@@ -10,6 +10,26 @@ die()
 	exit "$r"
 }
 
+find_channel()
+{
+	declare -n channels=$1
+	local channel=$2
+	local out=$3
+	local i other_channel
+
+	for i in "${!channels[@]}"; do
+		read_channel_name "${channels[$i]}" other_channel
+		# $channel can be a pattern:
+		# shellcheck disable=SC2053
+		if [[ $other_channel == $channel ]]; then
+			local "$out" && upvar "$out" "$i"
+			return 0
+		fi
+	done
+
+	return 1
+}
+
 is_sd_duplicate()
 {
 	local channel=$1
@@ -55,7 +75,7 @@ upvar()
 usage()
 {
 	printf "\
-Usage: %s CHANNELS_CONF [UNWANTED_CHANNELS]
+Usage: %s CHANNELS_CONF [CHANNEL_ORDER [UNWANTED_CHANNELS]]
 
 Clean SD channels for which an HD channel of same name exists, and optionally
 unwanted channels from a channels.conf. The cleaned channels.conf is printed to
@@ -63,10 +83,16 @@ standard out.
 
 The path to a channels.conf must be given as the first parameter CHANNELS_CONF.
 
-An optional file with a list of unwanted channels can be given as a second
-parameter UNWANTED_CHANNELS. Each line in this list should contain the name of a
-channel to remove from the output. The names may contain a * as a wildcard. Lines
-starting with # are treated as comments and ignored.
+An optional file with the desired channel order can be given as second
+parameter CHANNEL_ORDER. Each line in this list should contain the name of a
+channel. The names may contain a * as a wildcard. (Only) the first matching
+channel from the channels.conf is placed according to the order. All remaining
+channels that were not listed in the channel order are appended in the output.
+
+An optional file with a list of unwanted channels can be given as third
+parameter UNWANTED_CHANNELS. Each line in this list should contain the name of
+a channel to remove from the output. The names may contain a * as a wildcard.
+Lines starting with # are treated as comments and ignored.
 " "$0"
 }
 
@@ -75,16 +101,21 @@ if [[ $# -eq 0 ]]; then
 	exit 2
 fi
 
-[[ $# -le 2 ]] || die 2 "too many arguments\n"
+[[ $# -le 3 ]] || die 2 "too many arguments\n"
 [[ $# -ge 1 ]] || die 2 "missing argument(s)\n"
 
 # We load the complete input channels.conf upfront. The output of this script can
 # be redirected to the same file without problems.
 mapfile channel_lines <"$1"
 
+channel_order=()
+if [[ $# -gt 1 ]]; then
+	mapfile -t channel_order <"$2"
+fi
+
 unwanted_channels=()
-if [[ $# -eq 2 ]]; then
-	mapfile -t unwanted_channels <"$2"
+if [[ $# -gt 2 ]]; then
+	mapfile -t unwanted_channels <"$3"
 fi
 
 num_channels=${#channel_lines[@]}
@@ -102,4 +133,14 @@ done
 # Reindex, drop now-empty indices:
 channel_lines=("${channel_lines[@]}")
 
-printf "%s" "${channel_lines[@]}"
+sorted_channel_lines=()
+for ordered_channel in "${channel_order[@]}"; do
+	find_channel channel_lines "$ordered_channel" i || continue
+	sorted_channel_lines+=("${channel_lines[$i]}")
+	unset "channel_lines[$i]"
+done
+
+# Append remaining channels in the order they were discovered:
+sorted_channel_lines+=("${channel_lines[@]}")
+
+printf "%s" "${sorted_channel_lines[@]}"
