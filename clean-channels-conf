@@ -34,7 +34,7 @@ is_unwanted()
 	for unwanted_channel in "${unwanted_channels[@]}"; do
 		# $unwanted_channel can be a pattern:
 		# shellcheck disable=SC2053
-		if [[ $channel == $unwanted_channel && ${unwanted_channel:0:1} != '#' ]]; then
+		if [[ ${unwanted_channel:0:1} != '#' && $channel == $unwanted_channel ]]; then
 			return 0
 		fi
 	done
