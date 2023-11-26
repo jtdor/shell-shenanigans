@@ -64,7 +64,8 @@ is_unwanted()
 read_channel_name()
 {
 	local name=${1%%:*}
-	upvar "$2" "${name%%;*}"
+	local out=$2
+	local "$out" && upvar "$out" "${name%%;*}"
 }
 
 upvar()
