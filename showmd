@@ -3,6 +3,28 @@
 
 set -eu
 
+pandoc_header_include=$(
+	cat <<-EOT
+		<script>
+			async function reloadIfChanged() {
+				const resp = await fetch(location + ".stamp.txt");
+				if (!resp.ok) {
+					return;
+				}
+
+				const stamp = parseFloat(await resp.text());
+				const oldStamp = history.state ?? 0.0;
+				if (stamp > oldStamp) {
+					history.replaceState(stamp, "");
+					location.reload();
+				}
+			}
+
+			setInterval(reloadIfChanged, 1000);
+		</script>
+	EOT
+)
+
 cleanup()
 {
 	rm -fr -- "$tmpdir"
@@ -12,7 +34,9 @@ cleanup()
 if command -v pandoc >/dev/null; then
 	md2html()
 	{
-		pandoc -o"$2" -s --quiet "$1" || :
+		if pandoc -H<(printf '%s' "$pandoc_header_include") -o"$2" -s --quiet "$1"; then
+			date '+%s.%N' >"${2}.stamp.txt"
+		fi
 	}
 elif command -v markdown >/dev/null; then
 	md2html()
@@ -37,12 +61,12 @@ md_file="$1"
 
 tmpdir=$(mktemp -d) || exit 1
 trap cleanup EXIT HUP INT TERM
-html_file="${tmpdir}/index.html"
+html_file="${tmpdir}/${md_file##*/}.html"
 
 md2html "$md_file" "$html_file"
 python3 -m http.server -b "$bind_address" -d "$tmpdir" -- "$port" 2>/dev/null &
 pid=$!
-open "http://${bind_address}:${port}/"
+open "http://${bind_address}:${port}/${html_file##*/}"
 
 if command -v inotifywait >/dev/null; then
 	printf "Watching for changes ...\n"
